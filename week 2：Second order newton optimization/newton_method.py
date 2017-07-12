@@ -19,6 +19,8 @@ data_path='C:/Users/Abdoullahi/Math-of-Intelligence/week 2：Second order newton
 dataset= pd.read_csv(data_path)
 X_train=dataset.iloc[:,3:13].values
 Y_train=dataset.iloc[:,13].values
+X_train=X_train[:1000,:]
+Y_train=Y_train[:1000]
 
 # Encoding categorical data
 labelencoder_X_1 = LabelEncoder()
@@ -37,7 +39,7 @@ def sigmoid(theta,data_i):
     num_param = len(theta)
     the_sum = 0
     for i in range(num_param):
-        the_sum += theta[i]*data_i[i]
+        the_sum =the_sum + theta[i]*data_i[i]
     return 1/(1-exp(the_sum))
 
 def compute_error(theta,data,target):
@@ -46,10 +48,9 @@ def compute_error(theta,data,target):
     num_param= len(theta)
     for i in range(num_instance):
         sum_1=0
-        sum_2=0
         for j in range(num_param):
-            sum_1 += theta[i]*data[i,j]
-        error += (-target[i]*sum_1 + log(1+exp(sum_1)))
+            sum_1 += theta[j]*data[i,j]
+        error += (target[i]*sum_1 + log(1+exp(-sum_1)))
     return error
 
 def gradient_decent_step(theta, data , target , rate):
@@ -64,27 +65,34 @@ def gradient_decent_step(theta, data , target , rate):
 
 
 def gradient_decent_n_step(theta,data,target,rate,epochs):
-    error=[]
+    error = np.zeros(epochs)
     for i in range(epochs):
         error[i] = compute_error(theta,data,target)
-        theta=gradient_decent_step(theta,data,target,rate)
+        theta = gradient_decent_step(theta,data,target,rate)
     return theta,error
 
 def make_prediction(theta,data):
     num_instance=len(data)
-    predicted=[]
+    predicted=np.zeros(num_instance)
     for i in range(num_instance):
         predicted[i] = sigmoid(theta, data[i, :])
-    predicted = predicted[predicted >= 0.5]
+    for i in range(num_instance):
+        if (predicted[i]>=0.5):
+            predicted[i]=1
+        else:
+            predicted[i]=0
     return predicted
 
-if __name__ == '__main__':
-    epochs=25
-    rate=0.1
-    error = np.array(epochs)
-    theta=np.array([0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001])
-    theta ,error=gradient_decent_n_step(theta, X_train, Y_train, rate,epochs)
-    num_instance_test=len(X_test)
-    predicted = np.array(num_instance_test)
-    predicted = make_prediction(theta,X_test)
-    accuracy = accuracy_score(Y_test,predicted)
+epochs = 500
+rate = 0.00001
+theta=np.array([0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001])
+theta ,error=gradient_decent_n_step(theta, X_train, Y_train, rate,epochs)
+predicted = make_prediction(theta,X_test)
+accuracy = accuracy_score(Y_test,predicted)
+
+# Ploting the
+iterations=range(len(errors))
+plt.plot(iterations,errors)
+plt.ylabel('errors')
+plt.xlabel('Iterations')
+plt.show()
