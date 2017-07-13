@@ -11,8 +11,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import  train_test_split
 
 # import the datasets
-data_path='C:/Users/Abdoullahi\Desktop/udemy/PART 3. RECURRENT NEURAL NETWORKS (RNN)' \
-          '/Recurrent_Neural_Networks/Google_Stock_Price_Train.csv'
+data_path='Google_Stock_Price_Train.csv'
 dataset= pd.read_csv(data_path)
 X_train=dataset.iloc[0:len(dataset)-1,[1]].values
 Y_train=dataset.iloc[1:len(dataset),[1]].values
