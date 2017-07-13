@@ -1,32 +1,21 @@
 # -*- coding: utf-8 -*-
 # This is the second tutorial of Math of intelligence from Siraj
-# For this week we are going to implement logistic regression for churn modeling
-# We dispose user information from a bank and we want predict weather or not the costumer will
-# leave the bank or not
+# For this week we are going to implement linear regression for google stock price prediction
+# We will predict the stock price for the next day
 
 # Importing the dependency
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import  train_test_split
-from math import exp,log
-from sklearn.metrics import  accuracy_score
 
 # import the datasets
-data_path='Churn_Modelling.csv'
+data_path='C:/Users/Abdoullahi\Desktop/udemy/PART 3. RECURRENT NEURAL NETWORKS (RNN)' \
+          '/Recurrent_Neural_Networks/Google_Stock_Price_Train.csv'
 dataset= pd.read_csv(data_path)
-X_train=dataset.iloc[:,3:13].values
-Y_train=dataset.iloc[:,13].values
-X_train=X_train[:1000,:]
-Y_train=Y_train[:1000]
-
-# Encoding categorical data
-labelencoder_X_1 = LabelEncoder()
-X_train[:, 1] = labelencoder_X_1.fit_transform(X_train[:, 1])
-labelencoder_X_2 = LabelEncoder()
-X_train[:, 2] = labelencoder_X_2.fit_transform(X_train[:, 2])
+X_train=dataset.iloc[0:len(dataset)-1,[1]].values
+Y_train=dataset.iloc[1:len(dataset),[1]].values
 
 # Split training and test set
 X_train,X_test, Y_train ,Y_test = train_test_split(X_train,Y_train,test_size=0.3,random_state=1)
@@ -35,64 +24,58 @@ scaler = MinMaxScaler()
 X_train =scaler.fit_transform(X_train)
 X_test =scaler.transform(X_test)
 
-def sigmoid(theta,data_i):
-    num_param = len(theta)
-    the_sum = 0
-    for i in range(num_param):
-        the_sum =the_sum + theta[i]*data_i[i]
-    return 1/(1+exp(-the_sum))
-
-def compute_error(theta,data,target):
-    error =0
-    num_instance=len(data)
+def mss(theta,data,target):
+    num_instance = len(data)
+    error=0
     for i in range(num_instance):
-        error += -(target[i]*log(sigmoid(theta,data[i,:]))+(1-target[i])*log(1-sigmoid(theta,data[i,:])))/num_instance
-    return error
+        predicted=theta[0]+theta[1]*data[i]
+        error+=(target[i]-predicted)**2
+    return error/num_instance
 
-def gradient_decent_step(theta, data , target , rate):
-    num_instances = len(data)
-    num_param = len(theta)
-    for j in range(num_param):
-        dr_theta_j = 0
-        for i in range(num_instances):
-            dr_theta_j += (sigmoid(theta, data[i, :])-target[i])*data[i, j]
-        theta[j] = theta[j] - rate * dr_theta_j
+def compute_jacobian(theta, data , target ):
+    jaccobian=np.zeros(len(theta))
+    for i in range(len(data)):
+        jaccobian[0] +=-(target[i]-theta[0]-theta[1]*data[i])
+        jaccobian[1] += -(target[i] - theta[0] - theta[1] * data[i])*data[i]
+    return jaccobian
+
+def compute_hessien(theta,data,target):
+    hessien =np.zeros([len(theta),len(theta)])
+    for i in range(len(data)):
+        hessien[0,0]+=1
+        hessien[0,1]+=data[i]
+        hessien[1,0]+=data[i]
+        hessien[1,1]+=data[i]**2
+    return hessien
+def newton_optimization(theta,data,target,num_iteration = 300,eps = 1e-5):
+
+    for i in range(num_iteration):
+        jaccobian = compute_jacobian(theta,data,target)
+        hessien = compute_hessien(theta,data,target)
+        theta = np.array(np.subtract(theta, np.dot(np.linalg.inv(hessien), jaccobian)))
+        if np.abs(mss(theta,data,target))<eps:
+            break
+        print('Optimal m is %.2f and Optimal b is %.2f' % (theta[0], theta[1]))
     return theta
-
-
-def gradient_decent_n_step(theta,data,target,rate,epochs):
-    error = np.zeros(epochs)
-    for i in range(epochs):
-        error[i] = compute_error(theta,data,target)
-        theta = gradient_decent_step(theta,data,target,rate)
-    return theta,error
 
 def make_prediction(theta,data):
     num_instance = len(data)
     predicted = np.zeros(num_instance)
     for i in range(num_instance):
-        predicted[i] = sigmoid(theta, data[i, :])
-    for i in range(num_instance):
-        if (predicted[i] >= 0.5):
-            predicted[i] = 1
-        else:
-            predicted[i]=0
+        predicted[i] = theta[0]+theta[1]*data[i]
     return predicted
 
-def ploting_error(error):
-    iterations = range(len(error))
-    plt.plot(iterations, error)
-    plt.ylabel('errors')
-    plt.xlabel('Iterations')
-    plt.show()
+def ploting_the_decision(theta,data,target):
+    plt.plot(data, target, 'bo') #First plots the data points
+    plt.plot(data,  theta[0]+theta[1]* data) #Plot the line.
+    plt.title("Best line.")
+    plt.show() #shows the graph.
 
-if __name__ =='__main__':
-    epochs = 600
-    rate = 0.01
-    theta = np.zeros(9)
-    theta ,error=gradient_decent_n_step(theta, X_train, Y_train, rate,epochs)
+if __name__=='__main__':
+    theta = np.array([0.001, 0.002])
+    theta = newton_optimization(theta, X_train, Y_train)
     predicted = make_prediction(theta,X_test)
-    accuracy = accuracy_score(Y_test,predicted)
-    print(accuracy)
-    ploting_error(error)
+    error = mss(theta,X_test,Y_train)
+    print(error)
+    ploting_the_decision(theta, X_train, Y_train)
 
