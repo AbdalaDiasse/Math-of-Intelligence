@@ -27,9 +27,9 @@ dataset =scaler.fit_transform(dataset)
 num_instances = len(dataset)
 X_train = []
 Y_train = []
-for i in range(num_instances-7):
-    X_train.append(dataset[i:i+7,0])
-    Y_train.append(dataset[[i+7], 0])
+for i in range(num_instances-2):
+    X_train.append(dataset[i:i+2,0])
+    Y_train.append(dataset[[i+2], 0])
 X_train=np.array(X_train)
 Y_train=np.array(Y_train)
 
@@ -61,11 +61,11 @@ def gradient_decent_n_step(theta,data,target,rate,epochs,alpha):
         error[i] = rmss(theta,data,target)
         theta = gradient_decent_step_L2_norm(theta,data,target,rate,alpha)
     return theta,error
+
 def gradient_decent_n_step_n_alpha(theta,data,target,rate,epochs,alpha):
     error_n = []
     theta_n = []
     for i in range(len(alpha)):
-        print(i)
         theta_i,error_i = gradient_decent_n_step(theta,data,target,rate,epochs,alpha[i])
         error_n.append(error_i)
         theta_n.append(theta_i)
@@ -83,10 +83,10 @@ def ploting_error(error):
         plt.xlabel('Iterations')
     plt.show()
 
-epochs = 500
-rate = 1
-theta = np.zeros(8)
-alpha=np.array([0.001,0.01,0.1,1,10,100,100])
+epochs = 300
+rate = 0.01
+theta = np.zeros(3)
+alpha=np.array([0.001,0.01,0.1,1,10,100,1000])
 error_n,theta_n = gradient_decent_n_step_n_alpha(theta, X_train, Y_train, rate, epochs, alpha)
 predicted = make_prediction(theta,X_test)
 ploting_error(error_n)
